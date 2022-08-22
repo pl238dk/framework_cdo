@@ -1,0 +1,667 @@
+type Query {
+  activeChangeRequest: String
+  changeRequests(
+    limit: Int = 50
+    offset: Int = 0
+    sortField: ChangeRequestsSortField = CREATED_DATE
+    sortOrder: SortOrder = DESC
+    uid: [ID!]
+    name: String
+    searchTerm: String
+  ): ChangeRequestsResult
+  changelog(
+    limit: Int = 50
+    offset: Int = 0
+    sortField: ChangelogSortField = LAST_UPDATED
+    sortOrder: SortOrder = DESC
+    searchTerm: String
+    uid: ID
+    deviceName: String
+    changeType: [ChangeType!]
+    changeStatus: [ChangeStatus!]
+    user: [String!]
+    dateRange: DateRange
+    deviceUid: [ID!]
+    changeRequest: [String!]
+  ): ChangelogResult
+  devices(
+    limit: Int = 50
+    offset: Int = 0
+    sortField: DevicesSortField = NAME
+    sortOrder: SortOrder = ASC
+    uid: [ID!]
+    searchTerm: String
+    name: String
+    ipv4: String
+    serial: String
+    deviceType: [DeviceType]
+    configurationStatus: [DeviceConfigurationStatus!]
+    connectivityState: [DeviceConnectivityState!]
+    isModel: Boolean
+    conflictDetectionState: [DeviceConflictDetectionState!]
+  ): DevicesResult
+  objects(
+    limit: Int = 50
+    offset: Int = 0
+    sortField: ObjectsSortField = NAME
+    sortOrder: SortOrder = ASC
+    searchTerm: String
+    uid: [ID!]
+    name: String
+    objectType: [ObjectTypeFilter!] = [NETWORK_GROUP, NETWORK_OBJECT]
+    issues: [ObjectIssues!]
+    sharedFilter: FilterState
+    unassociatedFilter: FilterState
+    showSystemDefinedObjects: Boolean
+    deviceUid: [ID!]
+  ): ObjectsResult
+  tenantSettings: TenantSettings
+}
+
+enum ChangeRequestsSortField {
+  NAME
+  CREATED_DATE
+}
+
+enum SortOrder {
+  ASC
+  DESC
+}
+
+type ChangeRequestsResult {
+  items: [ChangeRequest!]
+  metadata: ChangeRequestsMetadata
+}
+
+type ChangeRequest {
+  uid: ID!
+  name: String
+  description: String
+  createdDate: DateTime
+  lastUpdatedDate: DateTime
+}
+
+scalar DateTime
+
+type ChangeRequestsMetadata {
+  count: Int
+}
+
+enum ChangelogSortField {
+  LAST_UPDATED
+}
+
+enum ChangeType {
+  CREATE
+  UPDATE
+  DELETE
+  ERROR
+}
+
+enum ChangeStatus {
+  COMPLETED
+  PENDING
+}
+
+input DateRange {
+  start: DateTime
+  end: DateTime
+}
+
+type ChangelogResult {
+  items: [Change!]
+  metadata: ChangelogMetadata
+}
+
+type Change {
+  uid: ID!
+  deviceUid: String
+  deviceName: String
+  lastDescription: String
+  lastUser: String
+  lastUpdated: DateTime
+  changeStatus: ChangeStatus
+  events: [ChangeEvent!]
+}
+
+type ChangeEvent {
+  user: String
+  changeType: ChangeType
+  eventDate: DateTime
+  class: String
+  details: ChangeEventDetails
+  action: ChangeEventAction
+  objectReference: ChangeEventObjectReference
+  changeRequest: String
+}
+
+type ChangeEventDetails {
+  class: String
+  description: String
+  diff: String
+}
+
+enum ChangeEventAction {
+  SAVE
+  DELETE
+  READ
+  SEARCH
+  ASSOCIATIONS
+  UPDATE
+  DISCOVER
+}
+
+type ChangeEventObjectReference {
+  uid: ID!
+  namespace: String
+  type: String
+}
+
+type ChangelogMetadata {
+  count: Int
+}
+
+enum DevicesSortField {
+  NAME
+  CONFIGURATION_STATUS
+  CONNECTIVITY
+}
+
+enum DeviceType {
+  ASA
+  ASR
+  ISR
+  WSA
+  CWS
+  FIREPOWER
+  FTD
+  UMBRELLA
+  MERAKI_SECURITY_APPLIANCE
+  AWS_VPC
+  FMC
+  FMC_FTD
+  GENERIC
+  IOS
+}
+
+enum DeviceConfigurationStatus {
+  NO_CONFIG
+  SYNCED
+  NOT_SYNCED
+  SYNC_ERROR
+  PENDING_REFRESH
+  PENDING_RECONNECT
+  STAGED_FOR_SYNC
+  RESET_ME
+  REFRESH_BY_REPLACING_CONFIG_WITH_MOST_RECENT_CONFIG
+  PENDING_CONFIG_RETRIEVAL_FOR_COMPARISON
+  PENDING_COMPARISON
+  PENDING_WRITE
+  WRITE_ERROR
+  PENDING_SECURITY_CONTEXT_MODE_RETRIEVAL
+  PENDING_ENABLE_RELOAD
+  PENDING_ENABLE_RELOAD_ON_DEMAND
+  PENDING_EXECUTION
+  PENDING_EXECUTION_ON_DEMAND
+  PENDING_CANCEL_RELOAD
+  CANCEL_RELOAD_ERROR
+  PENDING_WRITE_VERIFICATION
+  WRITE_VERIFICATION_ERROR
+  PENDING_CONFIG_RETRIEVAL_AFTER_RELOAD
+  PENDING_READ_BEFORE_REVERT
+  PENDING_REVERT_COMMAND_GENERATION
+  PENDING_REVERT
+  PENDING_WRITE_AFTER_REVERT
+  PENDING_REVERT_VERIFICATION
+  PENDING_CANCEL_RELOAD_AFTER_REVERT
+  READ_BEFORE_REVERT_ERROR
+  REVERT_ERROR
+  WRITE_AFTER_REVERT_ERROR
+  REVERT_VERIFICATION_ERROR
+  CANCEL_RELOAD_AFTER_REVERT_ERROR
+  UNKNOWN
+  PENDING_CONFIG_RETRIEVAL_AFTER_DISCONNECT
+  UNSUPPORTED_VERSION
+  PENDING_APPLY_FULL_CONFIG
+  PENDING_APPLY_FULL_CONFIG_VERIFICATION
+  PENDING_WRITE_FULL_CONFIG_VERIFICATION
+  PENDING_COMPARISON_OF_RUNNING_CONFIG_TO_CONFIG_ON_DISK
+  DIFF_REMAINS_AFTER_REVERT
+  PENDING_OOB_CHANGES_OVERWRITE
+  PENDING_OOB_CHANGES_OVERWRITE_VERIFICATION
+  PENDING_WRITE_AFTER_OOB_CHANGES_OVERWRITE
+  PENDING_UPGRADE
+  APPLY_TEMPLATE_FAILED
+}
+
+enum DeviceConnectivityState {
+  ONBOARDING
+  VALIDATING_CERT
+  CERT_VALIDATED
+  PENDING_CREDENTIAL_STORAGE
+  COMPLETED_CREDENTIAL_STORAGE
+  PENDING_CHANGED_CERT_ACCEPTANCE
+  CHANGED_CERT_ACCEPTED
+  PENDING_ONBOARDING_SETUP
+  ONLINE
+  OFFLINE
+  PENDING
+  UNREACHABLE
+  FAILED_CREDENTIAL_STORAGE
+  BAD_CREDENTIALS
+  UNKNOWN
+  GENERIC_ERROR
+  DUPLICATE_DEVICE
+  PENDING_WAIT_FOR_RELOAD_TO_BEGIN
+  WAITING_FOR_DEVICE_TO_COME_BACK_ONLINE
+  PENDING_CERT_RETRIEVAL_AFTER_RELOAD
+  UNSUPPORTED_VERSION
+  UNREGISTERED
+  INVALID_SERIAL_NUMBER
+  INSUFFICIENT_LICENSES
+  PARTIALLY_ONLINE
+  ATTACHED_TO_TEMPLATE
+  INCORRECT_PERMISSIONS
+}
+
+enum DeviceConflictDetectionState {
+  IN_SYNC
+  PENDING_OOB_DETECTION
+  OOB_CHANGE_DETECTED
+  STAGED_OOB_CHANGE_DETECTED
+  UNREVERTABLE_STAGED_OOB_CHANGE_DETECTED
+  UNKNOWN
+  COMPLETED_OOB_CHECK
+  SUSPENDED_OOB_DETECTION
+  PENDING_CHECKSUM
+  PENDING_GET_METADATA
+  GET_METADATA_FAILED
+  CHECKSUM_FAILED
+  RESTORED_FROM_STARTUP_CONFIG
+  PENDING_ACCESS_CONTROL_POLICY_UI_TIMESTAMP_OOB_DETECTION
+  PENDING_ACCESS_POLICY_HTML_OOB_DETECTION
+  DETERMINING_ACCESS_CONTROL_UI_OOB_FOR_AC_HTML_DETECTION
+  DETERMINING_ACCESS_CONTROL_OOB_FOR_AMP_DETECTION
+  PENDING_AMP_OOB_DETECTION
+  DETERMINING_AMP_OOB_FOR_IPS_UI_DETECTION
+  PENDING_IPS_UI_OOB_DETECTION
+  DETERMINING_IPS_UI_OOB_FOR_IPS_UPLOAD_DETECTION
+  PENDING_IPS_UPLOAD_OOB_DETECTION
+  UPDATE_DEVICE_STATE
+}
+
+type DevicesResult {
+  items: [Device!]
+  metadata: DevicesMetadata
+}
+
+type Device {
+  uid: ID!
+  name: String
+  namespace: String
+  deviceType: DeviceType
+  specificDevice: SpecificDevice
+  connectivityError: String
+  createdDate: DateTime
+  lastUpdatedDate: DateTime
+  version: Int
+  configurationStatus: DeviceConfigurationStatus
+  connectivityState: DeviceConnectivityState
+  ipv4: String
+  port: Int
+  interfaces: String
+  serial: String
+  highAvailability: DeviceHighAvailability
+  isModel: Boolean
+  conflictDetectionState: DeviceConflictDetectionState
+  softwareVersion: String
+}
+
+interface SpecificDevice {
+  uid: ID!
+  namespace: String
+  type: String
+}
+
+enum DeviceHighAvailability {
+  OFF
+  ACTIVE_STANDBY
+  ACTIVE_ACTIVE
+  UNKNOWN
+  NOT_APPLICABLE
+}
+
+type DevicesMetadata {
+  count: Int
+}
+
+enum ObjectsSortField {
+  NAME
+  OBJECT_TYPE
+}
+
+enum ObjectTypeFilter {
+  NETWORK_OBJECT
+  NETWORK_GROUP
+}
+
+enum ObjectIssues {
+  DUPLICATE
+  INCONSISTENT
+  UNUSED
+}
+
+enum FilterState {
+  ON
+  OFF
+}
+
+type ObjectsResult {
+  items: [Object!]
+  metadata: ObjectsMetadata
+}
+
+type Object {
+  uid: ID!
+  name: String
+  description: String
+  deviceType: DeviceType
+  deviceUid: ID
+  objectType: ObjectType
+  details: ObjectDetails
+  searchableDetails: String
+  isReadOnly: Boolean
+  createdDate: DateTime
+  issues: [String!]
+  issueType: String
+  ignoredIssues: [String!]
+  references: [ObjectReference!]
+  overrides: [ObjectOverride!]
+}
+
+enum ObjectType {
+  NETWORK_OBJECT
+  NETWORK_GROUP
+  SERVICE_OBJECT
+  SERVICE_TCP_OBJECT
+  SERVICE_UDP_OBJECT
+  SERVICE_ICMPV4_OBJECT
+  SERVICE_ICMPV6_OBJECT
+  SERVICE_PROTOCOL_OBJECT
+  SERVICE_GROUP
+  SERVICE_FTD_GROUP
+  PROTOCOL_GROUP
+  ICMP_GROUP
+  URL_OBJECT
+  URL_GROUP
+  APPLICATION_FILTER_OBJECT
+  EMBEDDED_APP_FILTER_OBJECT
+  DNS_GROUP_OBJECT
+  SECURITY_ZONE_OBJECT
+  ACTIVE_DIRECTORY_REALM_OBJECT
+  SPECIAL_IDENTITY_OBJECT
+  LOCAL_IDENTITY_OBJECT
+  SYSLOG_SERVER_OBJECT
+  INTRUSION_POLICY_GROUP
+  FTD_POLICY_DEFAULT_ACTION
+  FTD_IDENTITY_POLICY_DEFAULT_ACTION
+  FTD_SSL_POLICY_DEFAULT_ACTION
+  SETTINGS_DNS_DATA_INTERFACE_GROUP
+  SETTINGS_DNS_MGMT_INTERFACE_GROUP
+  SETTINGS_NTP_OBJECT
+  SETTINGS_DHCP_OBJECT
+  SETTINGS_DEVLOG_OBJECT
+  SETTINGS_MGMTACCESS_HTTP_GROUP
+  SETTINGS_MGMTACCESS_SSH_GROUP
+  SETTINGS_MGMTACCESS_DATA_OBJECT
+  SETTINGS_URL_FILTERING_PREFERENCES_OBJECT
+  SETTINGS_HOSTNAME_OBJECT
+  SETTINGS_INTRUSION_OBJECT
+  GEOLOCATION_OBJECT
+  NETWORK_FEED
+  URL_FEED
+  SECURITY_INTELLIGENCE
+  ANY_CONNECT_CLIENT_PROFILE
+  ANY_CONNECT_PACKAGE_FILE
+  INTERNAL_CERTIFICATE
+  INTERNAL_CA_CERTIFICATE
+  EXTERNAL_CA_CERTIFICATE
+  IKEV1_PROPOSAL
+  IKEV2_PROPOSAL
+  IKEV2_POLICY
+  IKEV1_POLICY
+  IDENTITY_SERVICES_ENGINE
+  SETTINGS_VPN_OBJECT
+  ANY_CONNECT_PROFILE
+  STATIC_ROUTING
+  RA_VPN
+  RA_VPN_EXT
+  RA_VPN_GROUP_POLICY
+  RA_VPN_CONNECTION_PROFILE
+  RA_VPN_CONFIGURATION
+  RADIUS_IDENTITY_SOURCE
+  RADIUS_IDENTITY_SOURCE_GROUP
+  TIME_RANGE
+  CLOUD_SECURITY_GROUP
+  AWS_PREFIX_LIST
+  UNKNOWN
+}
+
+union ObjectDetails =
+    NetworkDetailsIpRange
+  | NetworkDetailsIpEq
+  | NetworkGroupDetails
+type NetworkDetailsIpRange implements NetworkDetailsBase {
+  wildcardMask: String
+  start: String
+  end: String
+}
+
+interface NetworkDetailsBase {
+  wildcardMask: String
+}
+
+type NetworkDetailsIpEq implements NetworkDetailsBase {
+  wildcardMask: String
+  value: String
+}
+
+type NetworkGroupDetails {
+  items: [ObjectDetailsInNetworkGroup]
+}
+
+union ObjectDetailsInNetworkGroup = NetworkDetailsIpEq | ObjectReferenceDetails
+type ObjectReferenceDetails {
+  uid: ID!
+  name: String
+  type: ObjectType
+}
+
+type ObjectReference {
+  uid: ID!
+  type: ObjectReferenceType
+}
+
+enum ObjectReferenceType {
+  DEVICES
+  CONFIGURATIONS
+}
+
+type ObjectOverride {
+  reference: ObjectReference
+  overrideDetails: ObjectDetails
+}
+
+type ObjectsMetadata {
+  count: Int
+}
+
+type TenantSettings {
+  uid: ID!
+  enableChangeRequestTracking: Boolean
+  lastUpdatedDate: DateTime
+  createdDate: DateTime
+  autoAcceptDeviceChanges: Boolean
+  preventCiscoSupportFromViewingTenant: Boolean
+  autoDetectRuleSets: Boolean
+  allowDeploymentScheduling: Boolean
+}
+
+type Mutation {
+  clearActiveChangeRequest: String
+  createChangeRequest(input: CreateChangeRequestInput!): ChangeRequest
+  createNetworkGroup(
+    baseInput: CreateObjectBaseInput!
+    networkGroupInput: NetworkGroupInput!
+  ): Object
+  createNetworkObject(
+    baseInput: CreateObjectBaseInput!
+    ipAddressRangeInput: IpAddressRangeInput
+    ipAddressEqInput: IpAddressEqInput
+  ): Object
+  deleteChangeRequest(uid: ID!): ID
+  deleteDevice(uid: ID!): ID
+  deleteObject(uid: ID!): ID
+  overrideNetworkGroup(
+    sharedObjectUid: ID!
+    networkGroupInput: [OverrideNetworkGroupInput!]!
+  ): Object
+  overrideNetworkObject(
+    sharedObjectUid: ID!
+    networkObjectInput: [OverrideNetworkObjectInput!]!
+  ): Object
+  setActiveChangeRequest(name: String!): String
+  updateChangeRequest(input: UpdateChangeRequestInput!): ChangeRequest
+  updateDevice(input: UpdateDeviceInput!): Device
+  updateNetworkGroup(
+    baseInput: UpdateObjectBaseInput!
+    networkGroupInput: NetworkGroupInput!
+  ): Object
+  updateNetworkObject(
+    baseInput: UpdateObjectBaseInput!
+    ipAddressRangeInput: IpAddressRangeInput
+    ipAddressEqInput: IpAddressEqInput
+  ): Object
+  updateTenantSettings(input: UpdateTenantSettingsInput!): TenantSettings
+}
+
+input CreateChangeRequestInput {
+  name: String!
+  description: String
+}
+
+input CreateObjectBaseInput {
+  name: String!
+  deviceType: DeviceType!
+  description: String
+}
+
+input NetworkGroupInput {
+  objectReferences: [NetworkObjectReferenceDetailsInput!]
+  ipAddresses: [IpAddressEqInput!]
+}
+
+input NetworkObjectReferenceDetailsInput {
+  uid: ID!
+  name: String!
+  type: NetworkObjectReferenceType!
+}
+
+enum NetworkObjectReferenceType {
+  NETWORK_OBJECT
+  NETWORK_GROUP
+}
+
+input IpAddressEqInput {
+  value: String!
+}
+
+input IpAddressRangeInput {
+  start: String!
+  end: String!
+}
+
+input OverrideNetworkGroupInput {
+  overrideDetails: NetworkGroupInput!
+  reference: OverrideObjectReferenceInput!
+}
+
+input OverrideObjectReferenceInput {
+  uid: ID!
+  type: ObjectReferenceType!
+}
+
+input OverrideNetworkObjectInput {
+  ipAddressRange: IpAddressRangeInput
+  ipAddressEq: IpAddressEqInput
+  reference: OverrideObjectReferenceInput!
+}
+
+input UpdateChangeRequestInput {
+  uid: ID!
+  description: String
+}
+
+input UpdateDeviceInput {
+  uid: ID!
+  name: String
+}
+
+input UpdateObjectBaseInput {
+  uid: ID!
+  name: String
+  description: String
+}
+
+input UpdateTenantSettingsInput {
+  enableChangeRequestTracking: Boolean
+  preventCiscoSupportFromViewingTenant: Boolean
+  autoAcceptDeviceChanges: Boolean
+  allowDeploymentScheduling: Boolean
+}
+
+type AwsSpecificDevice implements SpecificDevice {
+  uid: ID!
+  name: String
+  namespace: String
+  type: String
+  vpcId: String
+  region: String
+}
+
+type MerakiSpecificDevice implements SpecificDevice {
+  uid: ID!
+  name: String
+  namespace: String
+  type: String
+}
+
+type AsaSpecificDevice implements SpecificDevice {
+  uid: ID!
+  name: String
+  namespace: String
+  type: String
+  vpnId: String
+}
+
+type UmbrellaSpecificDevice implements SpecificDevice {
+  uid: ID!
+  name: String
+  namespace: String
+  type: String
+}
+
+type FirepowerSpecificDevice implements SpecificDevice {
+  uid: ID!
+  name: String
+  namespace: String
+  type: String
+}
+
+type FtdSpecificDevice implements SpecificDevice {
+  uid: ID!
+  name: String
+  namespace: String
+  type: String
+}
+
