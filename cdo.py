@@ -2,8 +2,6 @@ import json
 import requests
 requests.packages.urllib3.disable_warnings()
 
-from timestamp.timestamp import timestamp
-
 class CDO(object):
 	def __init__(self, config=None):
 		self.base_url = 'https://edge.us.cdo.cisco.com/api/public'
@@ -56,7 +54,6 @@ class CDO(object):
 			output['result'] = response_json
 		return output
 	
-	@timestamp
 	def get_device_list(self):
 		output = []
 		limit = 100
